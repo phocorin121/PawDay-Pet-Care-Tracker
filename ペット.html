@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>PawDay – Pet Care Tracker – Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f4fbf9;--card:#fff;--tx:#17302c;--mu:#6b8580;--ac:#3fbf9f;--ac2:#dff3fb;--bd:#e0eeea;--rd:#e0607e;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#10201e;--card:#1a2e2b;--tx:#e8f5f2;--mu:#93b0aa;--ac:#4fd1b0;--ac2:#1f3a44;--bd:#264240;--rd:#f0728f;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#10201e;--card:#1a2e2b;--tx:#e8f5f2;--mu:#93b0aa;--ac:#4fd1b0;--ac2:#1f3a44;--bd:#264240;--rd:#f0728f;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-serif}
+#app{max-width:480px;margin:0 auto;min-height:100vh;padding:12px 14px 90px}
+h1{font-size:20px;margin:0}h2{font-size:16px;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:12px;margin:10px 0}
+.row{display:flex;align-items:center;gap:10px}.sp{flex:1}.mu{color:var(--mu);font-size:13px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:6px 0}
+.chip{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:20px;padding:8px 14px;font-size:15px;min-height:44px}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.av{font-size:34px;width:52px;height:52px;border-radius:50%;background:var(--ac2);display:grid;place-items:center}
+.bar{height:10px;border-radius:6px;background:var(--ac2);overflow:hidden}.bar i{display:block;height:100%;background:var(--ac)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:14px 0}
+.tile{position:relative;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:18px;padding:16px 4px;min-height:112px;font-size:18px;font-weight:600}
+.tile b{display:block;font-size:42px;margin-bottom:4px}summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:none}.tile.ok{background:var(--ac2);border-color:var(--ac)}
+.tile .ck{position:absolute;top:6px;right:8px;color:var(--ac);font-weight:700}
+button{font:inherit;cursor:pointer}.btn{background:var(--ac);color:#fff;border:0;border-radius:14px;padding:12px 18px;min-height:48px}
+.btn.g{background:var(--ac2);color:var(--tx)}.btn.d{background:var(--rd)}.btn.s{min-height:36px;padding:6px 12px;font-size:14px}
+.ic{background:none;border:0;color:var(--mu);font-size:18px;padding:6px;min-width:36px;min-height:36px}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)}.item:last-child{border:0}
+.box{width:32px;height:32px;border-radius:10px;border:2px solid var(--ac);background:none;color:#fff;font-size:18px;flex:none}.box.on{background:var(--ac)}
+input,select,textarea{width:100%;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);margin:4px 0 10px}
+label{font-size:13px;color:var(--mu)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav div{display:flex;width:100%;max-width:480px}nav button{flex:1;background:none;border:0;color:var(--mu);padding:8px 0;font-size:12px;min-height:56px}nav button.on{color:var(--ac);font-weight:700}nav b{display:block;font-size:20px}
+#md{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;justify-content:center;z-index:9}
+#md.show{display:flex}#md>div{background:var(--card);width:100%;max-width:480px;max-height:90vh;overflow:auto;border-radius:22px 22px 0 0;padding:16px}
+#toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:20px;display:none;z-index:10;font-size:14px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.cal button{background:none;border:1px solid transparent;color:var(--tx);border-radius:12px;min-height:46px;padding:2px}
+.cal .sel{border-color:var(--ac);background:var(--ac2)}.cal .td{font-weight:700;color:var(--ac)}.dot{font-size:10px;line-height:10px}
+.ad{border:1px dashed var(--mu);border-radius:10px;text-align:center;color:var(--mu);font-size:12px;padding:14px;margin-top:14px}
+.dy{display:flex;gap:4px}.dy button{flex:1;padding:8px 0;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}.dy .on{background:var(--ac);color:#fff}
+</style></head><body><div id="app"></div><div id="md"></div><div id="toast"></div>
+<script>
+const K="pct_v1";
+let S={pets:[],recs:[],rts:[],evs:[],lang:"en",theme:"sys",cur:null,tab:"home",cm:null,sel:null,hf:{cat:"",date:"",pet:"cur"}};
+try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const T={en:{home:"Home",cal:"Calendar",hist:"History",set:"Settings",meal:"Meal",water:"Water",walk:"Walk",toilet:"Toilet",med:"Medicine",other:"Other",
+morning:"Breakfast",noon:"Lunch",evening:"Dinner",oth:"Snack/Other",pee:"Pee",poop:"Poop",brush:"Brushing",shampoo:"Shampoo",nails:"Nail trim",teeth:"Teeth",custom:"Custom",
+dog:"Dog",cat:"Cat",pt:"Other pet",today:"Today",prog:"Today's progress",next:"Next up",none:"All done!",chk:"Daily checklist",add:"Add",save:"Save",cancel:"Cancel",del:"Delete",edit:"Edit",
+name:"Name",kind:"Type",bd:"Birthday (optional)",sex:"Sex (optional)",breed:"Breed (optional)",memo:"Notes",time:"Time",note:"Note",amt:"Amount / minutes (optional)",medn:"Medicine name",
+addpet:"Add pet",editpet:"Edit pet",nopet:"Add your first pet to start!",sure:"Delete this? This cannot be undone.",rec:"Recorded",undo:"Undo",log:"Today's log",
+rt:"Routine",every:"Every day",label:"Label (optional)",days:"Repeat on",plan:"Planned",done:"Done",ev:"Appointment",evt:"Vet / Vaccine / Other",title:"Title",date:"Date",
+all:"All",lang:"Language",theme:"Theme",sys:"System",lt:"Light",dk:"Dark",shp:"Share pet profile",shl:"Share care log (text)",unimp:"Not in prototype (Android only)",
+unl:"Local notifications, QR code, real AdMob ads, Room database",reset:"Erase all prototype data",ad:"Ad banner (test placeholder)",empty:"No records",pets:"Pets",ldays:["Su","Mo","Tu","We","Th","Fr","Sa"],vet:"Vet",vac:"Vaccine",
+copy:"Copy this text:",wk:"Weekdays",st:"Pet",photo:"Photo"},
+ja:{home:"ホーム",cal:"カレンダー",hist:"履歴",set:"設定",meal:"食事",water:"水",walk:"散歩",toilet:"トイレ",med:"お薬",other:"その他",
+morning:"朝食",noon:"昼食",evening:"夕食",oth:"おやつ・その他",pee:"おしっこ",poop:"うんち",brush:"ブラッシング",shampoo:"シャンプー",nails:"爪切り",teeth:"歯磨き",custom:"自由項目",
+dog:"犬",cat:"猫",pt:"その他",today:"今日",prog:"今日のお世話進捗",next:"次の予定",none:"すべて完了！",chk:"今日のチェックリスト",add:"追加",save:"保存",cancel:"キャンセル",del:"削除",edit:"編集",
+name:"名前",kind:"種類",bd:"誕生日（任意）",sex:"性別（任意）",breed:"品種（任意）",memo:"メモ",time:"時刻",note:"メモ",amt:"量・分（任意）",medn:"薬の名前",
+addpet:"ペットを追加",editpet:"ペットを編集",nopet:"最初のペットを登録しましょう！",sure:"削除しますか？元に戻せません。",rec:"記録しました",undo:"元に戻す",log:"今日の記録",
+rt:"ルーティン",every:"毎日",label:"ラベル（任意）",days:"繰り返し",plan:"予定",done:"実施済み",ev:"予定",evt:"通院・ワクチン・その他",title:"タイトル",date:"日付",
+all:"すべて",lang:"言語",theme:"テーマ",sys:"端末に合わせる",lt:"ライト",dk:"ダーク",shp:"プロフィールを共有",shl:"お世話記録を共有（テキスト）",unimp:"試作品では未実装（Android版のみ）",
+unl:"ローカル通知、QRコード、AdMob広告、Roomデータベース",reset:"試作品のデータをすべて消す",ad:"広告バナー（テスト用の仮表示）",empty:"記録なし",pets:"ペット",ldays:["日","月","火","水","木","金","土"],vet:"通院",vac:"ワクチン",
+copy:"このテキストをコピー：",wk:"平日",st:"ペット",photo:"写真"}};
+const t=k=>(T[S.lang]||T.en)[k]??k;
+const IC={meal:"🍖",water:"💧",walk:"🦮",toilet:"🚽",med:"💊",other:"✨"},CATS=Object.keys(IC);
+const SUBS={meal:["morning","noon","evening","oth"],toilet:["pee","poop"],other:["brush","shampoo","nails","teeth","custom"]};
+const AV={dog:"🐶",cat:"🐱",pt:"🐰"};
+const av=(p,s)=>p&&p.photo?`<img src="${p.photo}" alt="" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;vertical-align:middle">`:AV[p?p.type:"dog"];
+const pad=n=>String(n).padStart(2,"0"),ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const today=()=>ymd(new Date()),nowT=()=>pad(new Date().getHours())+":"+pad(new Date().getMinutes());
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const P=()=>S.pets.find(p=>p.id==S.cur)||S.pets[0],$=id=>document.getElementById(id);
+const loc=()=>S.lang==="ja"?"ja-JP":"en-US";
+function lab(r){if(r.cat==="med")return r.sub||t("med");if(r.sub==="custom"&&r.label)return r.label;return r.sub?t(r.sub):t(r.cat)}
+function recLine(r,ed){return `<div class="item"><span style="font-size:24px">${IC[r.cat]}</span><div class="sp"><b>${esc(lab(r))}</b> <span class="mu">${r.time}${r.amt?" · "+esc(r.amt):""}</span>${r.note?`<div class="mu">${esc(r.note)}</div>`:""}</div>${ed?`<button class="ic" onclick="recForm('${r.cat}','${r.id}')">✏️</button><button class="ic" onclick="ask('delRec(\\'${r.id}\\')')">🗑️</button>`:""}</div>`}
+function toast(m,u){const e=$("toast");e.innerHTML=esc(m)+(u?` · <a href="#" style="color:inherit;font-weight:700" onclick="${u};return false">${t("undo")}</a>`:"");e.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display="none",3500)}
+function modal(h){$("md").innerHTML="<div>"+h+"</div>";$("md").className="show"}
+function closeM(){$("md").className=""}
+$("md").onclick=e=>{if(e.target.id==="md")closeM()};
+function ask(fn){modal(`<p>${t("sure")}</p><div class="row"><button class="btn g sp" onclick="closeM()">${t("cancel")}</button><button class="btn d sp" onclick="closeM();${fn}">${t("del")}</button></div>`)}
+function go(x){S.tab=x;save();render()}
+function setTheme(){const r=document.documentElement;if(S.theme==="sys")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.theme)}
+function head(){const p=P();const d=new Date().toLocaleDateString(loc(),{weekday:"long",month:"long",day:"numeric"});
+return `<div class="row"><h1>🐾 PawDay</h1><span class="sp"></span><span class="mu">${d}</span></div><div class="chips">${S.pets.map(x=>`<button class="chip ${p&&x.id==p.id?"on":""}" onclick="S.cur='${x.id}';save();render()">${av(x,24)} ${esc(x.name)}</button>`).join("")}<button class="chip" onclick="petForm()">＋</button></div>`}
+function rtsFor(pid,date){const dw=new Date(date+"T00:00").getDay();return S.rts.filter(r=>r.pet==pid&&r.days.includes(dw)).sort((a,b)=>a.time.localeCompare(b.time))}
+const isDone=(r,date)=>S.recs.some(x=>x.rid==r.id&&x.date==date);
+function home(){const p=P();if(!p)return `<div class="card" style="text-align:center"><div style="font-size:48px">🐶🐱</div><p>${t("nopet")}</p><button class="btn" onclick="petForm()">＋ ${t("addpet")}</button></div>`;
+const td=today(),rs=rtsFor(p.id,td),dn=rs.filter(r=>isDone(r,td)).length,pc=rs.length?Math.round(dn/rs.length*100):0;
+const nx=rs.filter(r=>!isDone(r,td)).find(r=>r.time>=nowT())||rs.find(r=>!isDone(r,td));
+const recs=S.recs.filter(r=>r.pet==p.id&&r.date==td).sort((a,b)=>b.time.localeCompare(a.time));
+return `<div class="card"><div class="row"><div class="av">${av(p,52)}</div><div class="sp"><b style="font-size:18px">${esc(p.name)}</b><div class="mu">${esc(p.breed||"")}</div></div></div>
+<div class="row" style="margin-top:10px"><b>${t("prog")}</b><span class="sp"></span><b>${dn}/${rs.length}</b></div><div class="bar"><i style="width:${pc}%"></i></div>
+<div class="mu" style="margin-top:6px">${t("next")}: ${nx?`${nx.time} ${esc(rl(nx))}`:t("none")}</div></div>
+<div class="grid">${CATS.map(c=>{const n=recs.filter(r=>r.cat===c).length;return `<button class="tile ${n?"ok":""}" onclick="quick('${c}')">${n?`<span class="ck">✓${n>1?n:""}</span>`:""}<b>${IC[c]}</b>${t(c)}</button>`}).join("")}</div>
+<details class="card" ${rs.length?"open":""}><summary style="font-weight:700;font-size:18px;min-height:40px">✅ ${t("chk")}</summary><div style="margin-top:6px">${rs.length?rs.map(r=>`<div class="item"><button class="box ${isDone(r,td)?"on":""}" onclick="tog('${r.id}')">${isDone(r,td)?"✓":""}</button><div class="sp"><b>${r.time}</b> ${IC[r.cat]} ${esc(rl(r))}<div class="mu">${r.days.length==7?t("every"):r.days.map(d=>t("ldays")[d]).join(" ")}</div></div><button class="ic" onclick="rtForm('${r.id}')">✏️</button><button class="ic" onclick="ask('delRt(\\'${r.id}\\')')">🗑️</button></div>`).join(""):`<span class="mu">—</span>`}<button class="btn g s" style="margin-top:10px" onclick="rtForm()">＋ ${t("add")}</button></div></details>
+<details class="card"><summary style="font-weight:700;font-size:18px;min-height:40px">🕘 ${t("log")}</summary>${recs.length?recs.map(r=>recLine(r,0)).join(""):`<span class="mu">${t("empty")}</span>`}</details><div class="ad">${t("ad")}</div>`}
+const rl=r=>r.label||lab(r);
+function quick(c){const p=P();if(c==="meal"||c==="water"){const h=new Date().getHours();const sub=c==="meal"?(h<10?"morning":h<16?"noon":h<22?"evening":"oth"):"";const id=uid();S.recs.push({id,pet:p.id,cat:c,sub,date:today(),time:nowT(),note:"",amt:""});save();render();toast(t("rec")+": "+t(c),`undoRec('${id}')`)}else recForm(c)}
+function undoRec(id){S.recs=S.recs.filter(r=>r.id!=id);save();render()}
+function tog(id){const r=S.rts.find(x=>x.id==id),td=today();if(isDone(r,td))S.recs=S.recs.filter(x=>!(x.rid==id&&x.date==td));else S.recs.push({id:uid(),pet:r.pet,cat:r.cat,sub:r.sub,label:r.label,date:td,time:nowT(),note:"",amt:"",rid:id});save();render()}
+function subOpts(c,v){return SUBS[c]?`<label>${t("kind")}</label><select id="f_sub">${SUBS[c].map(s=>`<option value="${s}" ${v===s?"selected":""}>${t(s)}</option>`).join("")}</select>`:c==="med"?`<label>${t("medn")}</label><input id="f_sub" value="${esc(v||"")}">`:""}
+function recForm(c,id){const r=id?S.recs.find(x=>x.id==id):{sub:"",time:nowT(),note:"",amt:"",date:today()};
+modal(`<h2>${IC[c]} ${t(c)}</h2>${subOpts(c,r.sub)}<label>${t("date")}</label><input id="f_date" type="date" value="${r.date}"><label>${t("time")}</label><input id="f_time" type="time" value="${r.time}">${c==="walk"||c==="water"?`<label>${t("amt")}</label><input id="f_amt" value="${esc(r.amt)}">`:""}<label>${t("note")}</label><textarea id="f_note" rows="2">${esc(r.note)}</textarea>
+<div class="row"><button class="btn g sp" onclick="closeM()">${t("cancel")}</button><button class="btn sp" onclick="saveRec('${c}','${id||""}')">${t("save")}</button></div>`)}
+function saveRec(c,id){const v=k=>$("f_"+k)?$("f_"+k).value:"";const o={cat:c,sub:v("sub"),date:v("date")||today(),time:v("time")||nowT(),amt:v("amt"),note:v("note")};
+if(id)Object.assign(S.recs.find(x=>x.id==id),o);else S.recs.push({id:uid(),pet:P().id,...o});save();closeM();render();toast(t("rec"))}
+function delRec(id){S.recs=S.recs.filter(r=>r.id!=id);save();render()}
+function rtForm(id){const r=id?S.rts.find(x=>x.id==id):{time:"08:00",cat:"meal",sub:"morning",label:"",days:[0,1,2,3,4,5,6]};window._d=[...r.days];
+modal(`<h2>${t("rt")}</h2><label>${t("time")}</label><input id="r_time" type="time" value="${r.time}"><label>${t("kind")}</label><select id="r_cat" onchange="rtCat()">${CATS.map(c=>`<option value="${c}" ${r.cat===c?"selected":""}>${IC[c]} ${t(c)}</option>`).join("")}</select><div id="r_sub"></div><label>${t("label")}</label><input id="r_label" value="${esc(r.label)}">
+<label>${t("days")}</label><div class="dy" id="r_days"></div><br><div class="row"><button class="btn g sp" onclick="closeM()">${t("cancel")}</button><button class="btn sp" onclick="saveRt('${id||""}')">${t("save")}</button></div>`);window._sub=r.sub;rtCat();dyDraw()}
+function rtCat(){const c=$("r_cat").value;$("r_sub").innerHTML=SUBS[c]?`<label>${t("kind")}</label><select id="r_s">${SUBS[c].map(s=>`<option value="${s}" ${window._sub===s?"selected":""}>${t(s)}</option>`).join("")}</select>`:c==="med"?`<label>${t("medn")}</label><input id="r_s" value="${esc(window._sub||"")}">`:""}
+function dyDraw(){$("r_days").innerHTML=t("ldays").map((d,i)=>`<button class="${window._d.includes(i)?"on":""}" onclick="dyTog(${i})">${d}</button>`).join("")}
+function dyTog(i){const a=window._d;a.includes(i)?a.splice(a.indexOf(i),1):a.push(i);dyDraw()}
+function saveRt(id){if(!window._d.length)window._d=[0,1,2,3,4,5,6];const o={time:$("r_time").value||"08:00",cat:$("r_cat").value,sub:$("r_s")?$("r_s").value:"",label:$("r_label").value,days:[...window._d]};
+if(id)Object.assign(S.rts.find(x=>x.id==id),o);else S.rts.push({id:uid(),pet:P().id,...o});save();closeM();render()}
+function delRt(id){S.rts=S.rts.filter(r=>r.id!=id);save();render()}
+function petForm(id){const p=id?S.pets.find(x=>x.id==id):{name:"",type:"dog",bd:"",sex:"",breed:"",memo:""};
+window._ph=p.photo||"";modal(`<h2>${t(id?"editpet":"addpet")}</h2><div style="text-align:center;margin-bottom:10px"><div id="p_prev" class="av" style="margin:0 auto 8px;width:84px;height:84px;font-size:44px;overflow:hidden">${av(p,84)}</div><label class="btn g s" style="display:inline-block;cursor:pointer;font-size:14px;color:var(--tx)">📷 ${t("photo")}<input type="file" accept="image/*" hidden onchange="pickPh(this)"></label> <button class="btn g s" onclick="window._ph='';$('p_prev').innerHTML=AV[$('p_type').value]">✕</button></div><label>${t("name")}</label><input id="p_name" value="${esc(p.name)}"><label>${t("kind")}</label><select id="p_type">${["dog","cat","pt"].map(k=>`<option value="${k}" ${p.type===k?"selected":""}>${AV[k]} ${t(k)}</option>`).join("")}</select><label>${t("bd")}</label><input id="p_bd" type="date" value="${p.bd}"><label>${t("sex")}</label><select id="p_sex">${["","♂","♀"].map(k=>`<option ${p.sex===k?"selected":""}>${k}</option>`).join("")}</select><label>${t("breed")}</label><input id="p_breed" value="${esc(p.breed)}"><label>${t("memo")}</label><textarea id="p_memo" rows="2">${esc(p.memo)}</textarea>
+<div class="row"><button class="btn g sp" onclick="closeM()">${t("cancel")}</button><button class="btn sp" onclick="savePet('${id||""}')">${t("save")}</button></div>`)}
+function pickPh(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas"),m=Math.min(im.width,im.height);c.width=200;c.height=200;c.getContext("2d").drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,200,200);window._ph=c.toDataURL("image/jpeg",0.8);$("p_prev").innerHTML=`<img src="${window._ph}" style="width:84px;height:84px;border-radius:50%;object-fit:cover">`};im.src=r.result};r.readAsDataURL(f)}
+function savePet(id){const n=$("p_name").value.trim();if(!n){$("p_name").focus();return}const o={name:n,type:$("p_type").value,bd:$("p_bd").value,sex:$("p_sex").value,breed:$("p_breed").value,memo:$("p_memo").value,photo:window._ph||""};
+if(id)Object.assign(S.pets.find(x=>x.id==id),o);else{const i=uid();S.pets.push({id:i,...o});S.cur=i}save();closeM();render()}
+function delPet(id){S.pets=S.pets.filter(p=>p.id!=id);S.recs=S.recs.filter(r=>r.pet!=id);S.rts=S.rts.filter(r=>r.pet!=id);S.evs=S.evs.filter(r=>r.pet!=id);S.cur=S.pets[0]?.id||null;save();render()}
+function calv(){const p=P();if(!p)return home();const now=new Date();if(!S.cm)S.cm=ymd(now).slice(0,7);if(!S.sel)S.sel=today();
+const [y,m]=S.cm.split("-").map(Number),f=new Date(y,m-1,1).getDay(),n=new Date(y,m,0).getDate();let c="";
+t("ldays").forEach(d=>c+=`<div class="mu">${d}</div>`);for(let i=0;i<f;i++)c+="<div></div>";
+for(let d=1;d<=n;d++){const ds=y+"-"+pad(m)+"-"+pad(d),hr=S.recs.some(r=>r.pet==p.id&&r.date==ds),he=S.evs.some(r=>r.pet==p.id&&r.date==ds);
+c+=`<button class="${ds==S.sel?"sel":""} ${ds==today()?"td":""}" onclick="S.sel='${ds}';render()">${d}<div class="dot">${hr?"🟢":""}${he?"🔵":""}</div></button>`}
+const ev=S.evs.filter(e=>e.pet==p.id&&e.date==S.sel).sort((a,b)=>a.time.localeCompare(b.time)),rs=rtsFor(p.id,S.sel),rc=S.recs.filter(r=>r.pet==p.id&&r.date==S.sel).sort((a,b)=>a.time.localeCompare(b.time));
+return `<h2>${S.cm.replace("-"," / ")}</h2><div class="row"><button class="btn g s" onclick="mv(-1)">◀</button><span class="sp"></span><button class="btn g s" onclick="mv(1)">▶</button></div><div class="card"><div class="cal">${c}</div><div class="mu" style="margin-top:6px">🔵 ${t("plan")}　🟢 ${t("done")}</div></div>
+<div class="row"><h2 class="sp">${S.sel}</h2><button class="btn s" onclick="evForm()">＋ ${t("ev")}</button></div>
+<div class="card"><b>🔵 ${t("plan")}</b>${ev.map(e=>`<div class="item"><span>${e.type==="vac"?"💉":e.type==="vet"?"🏥":"📌"}</span><div class="sp"><b>${e.time}</b> ${esc(e.title)}</div><button class="ic" onclick="ask('delEv(\\'${e.id}\\')')">🗑️</button></div>`).join("")}${rs.map(r=>`<div class="item"><span>${IC[r.cat]}</span><div class="sp"><b>${r.time}</b> ${esc(rl(r))}</div><span class="mu">${isDone(r,S.sel)?"✓":""}</span></div>`).join("")}${ev.length+rs.length?"":`<div class="mu">—</div>`}</div>
+<div class="card"><b>🟢 ${t("done")}</b>${rc.length?rc.map(r=>recLine(r,1)).join(""):`<div class="mu">${t("empty")}</div>`}</div>`}
+function mv(d){let [y,m]=S.cm.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}S.cm=y+"-"+pad(m);render()}
+function evForm(){modal(`<h2>${t("ev")}</h2><label>${t("kind")}</label><select id="e_type"><option value="vet">🏥 ${t("vet")}</option><option value="vac">💉 ${t("vac")}</option><option value="oth">📌 ${t("other")}</option></select><label>${t("title")}</label><input id="e_title"><label>${t("date")}</label><input id="e_date" type="date" value="${S.sel}"><label>${t("time")}</label><input id="e_time" type="time" value="10:00">
+<div class="row"><button class="btn g sp" onclick="closeM()">${t("cancel")}</button><button class="btn sp" onclick="saveEv()">${t("save")}</button></div>`)}
+function saveEv(){const ty=$("e_type").value;S.evs.push({id:uid(),pet:P().id,type:ty,title:$("e_title").value||t(ty==="oth"?"other":ty),date:$("e_date").value||S.sel,time:$("e_time").value||"10:00"});S.sel=S.evs.at(-1).date;S.cm=S.sel.slice(0,7);save();closeM();render()}
+function delEv(id){S.evs=S.evs.filter(e=>e.id!=id);save();render()}
+function hist(){if(!S.pets.length)return home();const f=S.hf;let l=S.recs.filter(r=>(f.pet==="all"||r.pet==(f.pet==="cur"?P().id:f.pet))&&(!f.cat||r.cat===f.cat)&&(!f.date||r.date===f.date));
+l.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));let g="",ld="";
+l.forEach(r=>{if(r.date!==ld){ld=r.date;g+=`<div class="mu" style="margin-top:10px"><b>${r.date}</b></div>`}g+=recLine(r,1)+(f.pet==="all"?`<div class="mu" style="margin-top:-8px">${AV[(S.pets.find(p=>p.id==r.pet)||{}).type]} ${esc((S.pets.find(p=>p.id==r.pet)||{}).name)}</div>`:"")});
+return `<h2>${t("hist")}</h2><div class="card"><label>${t("st")}</label><select onchange="S.hf.pet=this.value;save();render()"><option value="cur" ${f.pet==="cur"?"selected":""}>${esc(P().name)}</option><option value="all" ${f.pet==="all"?"selected":""}>${t("all")}</option></select><label>${t("kind")}</label><select onchange="S.hf.cat=this.value;save();render()"><option value="">${t("all")}</option>${CATS.map(c=>`<option value="${c}" ${f.cat===c?"selected":""}>${IC[c]} ${t(c)}</option>`).join("")}</select><label>${t("date")}</label><div class="row"><input type="date" value="${f.date}" onchange="S.hf.date=this.value;save();render()" style="margin:4px 0"><button class="btn g s" onclick="S.hf.date='';save();render()">✕</button></div></div><div class="card">${g||`<span class="mu">${t("empty")}</span>`}</div><div class="ad">${t("ad")}</div>`}
+function shareTxt(x){if(navigator.share)navigator.share({text:x}).catch(()=>{});else modal(`<p>${t("copy")}</p><textarea rows="8">${esc(x)}</textarea><button class="btn" onclick="closeM()">OK</button>`)}
+function shareProf(id){const p=S.pets.find(x=>x.id==id);shareTxt(`${AV[p.type]} ${p.name} (${t(p.type)})\n${p.breed||""} ${p.sex||""}\n${p.bd?t("bd").split(" ")[0]+": "+p.bd:""}\n${p.memo||""}`.trim())}
+function shareLog(){const p=P(),td=today();shareTxt(`${p.name} – ${td}\n`+S.recs.filter(r=>r.pet==p.id&&r.date==td).sort((a,b)=>a.time.localeCompare(b.time)).map(r=>`${r.time} ${IC[r.cat]} ${lab(r)}${r.note?" – "+r.note:""}`).join("\n"))}
+function sett(){return `<h2>${t("set")}</h2><div class="card"><label>${t("lang")}</label><select onchange="S.lang=this.value;save();render()"><option value="en" ${S.lang==="en"?"selected":""}>English</option><option value="ja" ${S.lang==="ja"?"selected":""}>日本語</option></select><label>${t("theme")}</label><select onchange="S.theme=this.value;save();render()">${[["sys","sys"],["light","lt"],["dark","dk"]].map(([v,k])=>`<option value="${v}" ${S.theme===v?"selected":""}>${t(k)}</option>`).join("")}</select></div>
+<h2>${t("pets")}</h2><div class="card">${S.pets.map(p=>`<div class="item"><span style="font-size:26px">${av(p,38)}</span><div class="sp"><b>${esc(p.name)}</b></div><button class="ic" onclick="shareProf('${p.id}')">📤</button><button class="ic" onclick="petForm('${p.id}')">✏️</button><button class="ic" onclick="ask('delPet(\\'${p.id}\\')')">🗑️</button></div>`).join("")}<button class="btn g" style="margin-top:8px" onclick="petForm()">＋ ${t("addpet")}</button></div>
+${S.pets.length?`<button class="btn g" style="width:100%" onclick="shareLog()">📤 ${t("shl")}</button>`:""}
+<div class="card" style="margin-top:14px"><b>${t("unimp")}</b><div class="mu">${t("unl")}</div></div><button class="btn d" onclick="ask('S.pets=[];S.recs=[];S.rts=[];S.evs=[];S.cur=null;save();render()')">${t("reset")}</button>`}
+function render(){setTheme();document.documentElement.lang=S.lang;if(!S.cur&&S.pets[0])S.cur=S.pets[0].id;
+const v={home,cal:calv,hist,set:sett}[S.tab]();
+$("app").innerHTML=(S.tab==="set"?"":head())+v+`<nav><div>${[["home","🏠"],["cal","📅"],["hist","📋"],["set","⚙️"]].map(([k,i])=>`<button class="${S.tab===k?"on":""}" onclick="go('${k}')"><b>${i}</b>${t(k)}</button>`).join("")}</div></nav>`}
+render();
+</script></body></html>
