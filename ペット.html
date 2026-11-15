@@ -35,12 +35,12 @@ nav div{display:flex;width:100%;max-width:480px}nav button{flex:1;background:non
 .cal .sel{border-color:var(--ac);background:var(--ac2)}.cal .td{font-weight:700;color:var(--ac)}.dot{font-size:10px;line-height:10px}
 .ad{border:1px dashed var(--mu);border-radius:10px;text-align:center;color:var(--mu);font-size:12px;padding:14px;margin-top:14px}
 .dy{display:flex;gap:4px}.dy button{flex:1;padding:8px 0;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}.dy .on{background:var(--ac);color:#fff}
-</style></head><body><div id="app"></div><div id="md"></div><div id="toast"></div>
+</style></head><body><div id="storage-error" role="alert" style="display:none;position:sticky;top:0;z-index:11;background:#a32036;color:white;padding:12px"></div><div id="app"></div><div id="md"></div><div id="toast"></div>
 <script>
 const K="pct_v1";
 let S={pets:[],recs:[],rts:[],evs:[],lang:"en",theme:"sys",cur:null,tab:"home",cm:null,sel:null,hf:{cat:"",date:"",pet:"cur"}};
 try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const save=()=>{const e=document.getElementById("storage-error");try{localStorage.setItem(K,JSON.stringify(S));if(e)e.style.display="none";return true}catch(err){if(e){e.textContent=S.lang==="ja"?"保存できませんでした。画面上の変更は再読み込みすると失われる可能性があります。空き容量やブラウザの保存設定を確認してください。":"Could not save. Changes on screen may be lost when reloading. Check available storage and browser storage settings.";e.style.display="block"}return false}};
 const T={en:{home:"Home",cal:"Calendar",hist:"History",set:"Settings",meal:"Meal",water:"Water",walk:"Walk",toilet:"Toilet",med:"Medicine",other:"Other",
 morning:"Breakfast",noon:"Lunch",evening:"Dinner",oth:"Snack/Other",pee:"Pee",poop:"Poop",brush:"Brushing",shampoo:"Shampoo",nails:"Nail trim",teeth:"Teeth",custom:"Custom",
 dog:"Dog",cat:"Cat",pt:"Other pet",today:"Today",prog:"Today's progress",next:"Next up",none:"All done!",chk:"Daily checklist",add:"Add",save:"Save",cancel:"Cancel",del:"Delete",edit:"Edit",
@@ -110,7 +110,7 @@ modal(`<h2>${t("rt")}</h2><label>${t("time")}</label><input id="r_time" type="ti
 function rtCat(){const c=$("r_cat").value;$("r_sub").innerHTML=SUBS[c]?`<label>${t("kind")}</label><select id="r_s">${SUBS[c].map(s=>`<option value="${s}" ${window._sub===s?"selected":""}>${t(s)}</option>`).join("")}</select>`:c==="med"?`<label>${t("medn")}</label><input id="r_s" value="${esc(window._sub||"")}">`:""}
 function dyDraw(){$("r_days").innerHTML=t("ldays").map((d,i)=>`<button class="${window._d.includes(i)?"on":""}" onclick="dyTog(${i})">${d}</button>`).join("")}
 function dyTog(i){const a=window._d;a.includes(i)?a.splice(a.indexOf(i),1):a.push(i);dyDraw()}
-function saveRt(id){if(!window._d.length)window._d=[0,1,2,3,4,5,6];const o={time:$("r_time").value||"08:00",cat:$("r_cat").value,sub:$("r_s")?$("r_s").value:"",label:$("r_label").value,days:[...window._d]};
+function saveRt(id){if(!window._d.length){const e=$("r_days");e.setAttribute("role","alert");let msg=$("r_days_error");if(!msg){msg=document.createElement("p");msg.id="r_days_error";e.after(msg)}msg.textContent=S.lang==="ja"?"曜日を1つ以上選んでください。":"Select at least one day.";return}const o={time:$("r_time").value||"08:00",cat:$("r_cat").value,sub:$("r_s")?$("r_s").value:"",label:$("r_label").value,days:[...window._d]};
 if(id)Object.assign(S.rts.find(x=>x.id==id),o);else S.rts.push({id:uid(),pet:P().id,...o});save();closeM();render()}
 function delRt(id){S.rts=S.rts.filter(r=>r.id!=id);save();render()}
 function petForm(id){const p=id?S.pets.find(x=>x.id==id):{name:"",type:"dog",bd:"",sex:"",breed:"",memo:""};
@@ -130,7 +130,7 @@ return `<h2>${S.cm.replace("-"," / ")}</h2><div class="row"><button class="btn g
 <div class="row"><h2 class="sp">${S.sel}</h2><button class="btn s" onclick="evForm()">＋ ${t("ev")}</button></div>
 <div class="card"><b>🔵 ${t("plan")}</b>${ev.map(e=>`<div class="item"><span>${e.type==="vac"?"💉":e.type==="vet"?"🏥":"📌"}</span><div class="sp"><b>${e.time}</b> ${esc(e.title)}</div><button class="ic" onclick="ask('delEv(\\'${e.id}\\')')">🗑️</button></div>`).join("")}${rs.map(r=>`<div class="item"><span>${IC[r.cat]}</span><div class="sp"><b>${r.time}</b> ${esc(rl(r))}</div><span class="mu">${isDone(r,S.sel)?"✓":""}</span></div>`).join("")}${ev.length+rs.length?"":`<div class="mu">—</div>`}</div>
 <div class="card"><b>🟢 ${t("done")}</b>${rc.length?rc.map(r=>recLine(r,1)).join(""):`<div class="mu">${t("empty")}</div>`}</div>`}
-function mv(d){let [y,m]=S.cm.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}S.cm=y+"-"+pad(m);render()}
+function mv(d){let [y,m]=S.cm.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}S.cm=y+"-"+pad(m);const day=Number((S.sel||today()).slice(8,10));S.sel=S.cm+"-"+pad(Math.min(day,new Date(y,m,0).getDate()));save();render()}
 function evForm(){modal(`<h2>${t("ev")}</h2><label>${t("kind")}</label><select id="e_type"><option value="vet">🏥 ${t("vet")}</option><option value="vac">💉 ${t("vac")}</option><option value="oth">📌 ${t("other")}</option></select><label>${t("title")}</label><input id="e_title"><label>${t("date")}</label><input id="e_date" type="date" value="${S.sel}"><label>${t("time")}</label><input id="e_time" type="time" value="10:00">
 <div class="row"><button class="btn g sp" onclick="closeM()">${t("cancel")}</button><button class="btn sp" onclick="saveEv()">${t("save")}</button></div>`)}
 function saveEv(){const ty=$("e_type").value;S.evs.push({id:uid(),pet:P().id,type:ty,title:$("e_title").value||t(ty==="oth"?"other":ty),date:$("e_date").value||S.sel,time:$("e_time").value||"10:00"});S.sel=S.evs.at(-1).date;S.cm=S.sel.slice(0,7);save();closeM();render()}
@@ -141,13 +141,19 @@ l.forEach(r=>{if(r.date!==ld){ld=r.date;g+=`<div class="mu" style="margin-top:10
 return `<h2>${t("hist")}</h2><div class="card"><label>${t("st")}</label><select onchange="S.hf.pet=this.value;save();render()"><option value="cur" ${f.pet==="cur"?"selected":""}>${esc(P().name)}</option><option value="all" ${f.pet==="all"?"selected":""}>${t("all")}</option></select><label>${t("kind")}</label><select onchange="S.hf.cat=this.value;save();render()"><option value="">${t("all")}</option>${CATS.map(c=>`<option value="${c}" ${f.cat===c?"selected":""}>${IC[c]} ${t(c)}</option>`).join("")}</select><label>${t("date")}</label><div class="row"><input type="date" value="${f.date}" onchange="S.hf.date=this.value;save();render()" style="margin:4px 0"><button class="btn g s" onclick="S.hf.date='';save();render()">✕</button></div></div><div class="card">${g||`<span class="mu">${t("empty")}</span>`}</div><div class="ad">${t("ad")}</div>`}
 function shareTxt(x){if(navigator.share)navigator.share({text:x}).catch(()=>{});else modal(`<p>${t("copy")}</p><textarea rows="8">${esc(x)}</textarea><button class="btn" onclick="closeM()">OK</button>`)}
 function shareProf(id){const p=S.pets.find(x=>x.id==id);shareTxt(`${AV[p.type]} ${p.name} (${t(p.type)})\n${p.breed||""} ${p.sex||""}\n${p.bd?t("bd").split(" ")[0]+": "+p.bd:""}\n${p.memo||""}`.trim())}
-function shareLog(){const p=P(),td=today();shareTxt(`${p.name} – ${td}\n`+S.recs.filter(r=>r.pet==p.id&&r.date==td).sort((a,b)=>a.time.localeCompare(b.time)).map(r=>`${r.time} ${IC[r.cat]} ${lab(r)}${r.note?" – "+r.note:""}`).join("\n"))}
+function shareLog(){const p=P(),td=today();shareTxt(`${p.name} – ${td}\n`+S.recs.filter(r=>r.pet==p.id&&r.date==td).sort((a,b)=>a.time.localeCompare(b.time)).map(r=>`${r.time} ${IC[r.cat]} ${lab(r)}${r.amt?" · "+r.amt:""}${r.note?" – "+r.note:""}`).join("\n"))}
 function sett(){return `<h2>${t("set")}</h2><div class="card"><label>${t("lang")}</label><select onchange="S.lang=this.value;save();render()"><option value="en" ${S.lang==="en"?"selected":""}>English</option><option value="ja" ${S.lang==="ja"?"selected":""}>日本語</option></select><label>${t("theme")}</label><select onchange="S.theme=this.value;save();render()">${[["sys","sys"],["light","lt"],["dark","dk"]].map(([v,k])=>`<option value="${v}" ${S.theme===v?"selected":""}>${t(k)}</option>`).join("")}</select></div>
 <h2>${t("pets")}</h2><div class="card">${S.pets.map(p=>`<div class="item"><span style="font-size:26px">${av(p,38)}</span><div class="sp"><b>${esc(p.name)}</b></div><button class="ic" onclick="shareProf('${p.id}')">📤</button><button class="ic" onclick="petForm('${p.id}')">✏️</button><button class="ic" onclick="ask('delPet(\\'${p.id}\\')')">🗑️</button></div>`).join("")}<button class="btn g" style="margin-top:8px" onclick="petForm()">＋ ${t("addpet")}</button></div>
 ${S.pets.length?`<button class="btn g" style="width:100%" onclick="shareLog()">📤 ${t("shl")}</button>`:""}
 <div class="card" style="margin-top:14px"><b>${t("unimp")}</b><div class="mu">${t("unl")}</div></div><button class="btn d" onclick="ask('S.pets=[];S.recs=[];S.rts=[];S.evs=[];S.cur=null;save();render()')">${t("reset")}</button>`}
-function render(){setTheme();document.documentElement.lang=S.lang;if(!S.cur&&S.pets[0])S.cur=S.pets[0].id;
+function render(){renderedDate=today();setTheme();document.documentElement.lang=S.lang;if(!S.cur&&S.pets[0])S.cur=S.pets[0].id;
 const v={home,cal:calv,hist,set:sett}[S.tab]();
 $("app").innerHTML=(S.tab==="set"?"":head())+v+`<nav><div>${[["home","🏠"],["cal","📅"],["hist","📋"],["set","⚙️"]].map(([k,i])=>`<button class="${S.tab===k?"on":""}" onclick="go('${k}')"><b>${i}</b>${t(k)}</button>`).join("")}</div></nav>`}
+let renderedDate=today();
+function refreshDate(){if(document.hidden||$("md").className==="show")return;if(today()!==renderedDate)render()}
+setInterval(refreshDate,30000);
+document.addEventListener("visibilitychange",refreshDate);
+window.addEventListener("focus",refreshDate);
 render();
 </script></body></html>
+
