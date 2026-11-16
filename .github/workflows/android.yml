@@ -1,0 +1,44 @@
+name: Android debug APK
+on:
+  push:
+    branches: [main, 'android/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - run: node tests/prototype.test.cjs
+      - run: gradle --no-daemon assembleDebug testDebugUnitTest lintDebug
+      - name: Prepare APK metadata
+        run: |
+          mkdir -p artifacts
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PawDay-debug.apk
+          printf 'commit=%s\napplicationId=com.phocorin.pawday\nversionCode=1\n' "$GITHUB_SHA" > artifacts/build-info.txt
+          sha256sum artifacts/PawDay-debug.apk >> artifacts/build-info.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PawDay-debug-${{ github.sha }}
+          path: artifacts/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: |
+            app/build/reports/
+            app/build/test-results/

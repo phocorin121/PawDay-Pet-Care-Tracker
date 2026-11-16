@@ -1,0 +1,9 @@
+.gradle/
+gradle-isolated/
+build-*.txt
+build-log.txt
+emulator-*.txt
+**/build/
+local.properties
+.idea/
+*.iml
